@@ -103,9 +103,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return;
     }
   
-        }
 
-    
+        }
 
   if (interaction.commandName === 'teste') {
     return interaction.reply('🧪 Teste! Nessie está te aguardando em Deeper Well!');
