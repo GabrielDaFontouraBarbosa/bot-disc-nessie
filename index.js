@@ -11,6 +11,56 @@ process.on('unhandledRejection', console.error);
 process.on('uncaughtException', console.error);
 client.on('error', console.error);
 
+const RARITIES = [
+  'Cursed','Torn','Worn','Stocky','Sturdy','Blessed','Enchanted','Powerful',
+  'Epic','Legendary','Godly','Mythical','Transcendent','Supreme','Ultimate','Ultimate+','Ultimate++'
+];
+const RARITY_WEIGHTS = [20,18,16,14,12,10,9,8,6,5,4,3,2,1.5,1,0.5,0.25]; // altas mais raras
+
+const MATERIALS = ['Leather','Chain','Mail','Plate','Pristine'];
+const SLOTS = ['Helmet','Chest','Gloves','Boots'];
+
+// mensagem/emoji/cor por raridade
+const RARITY_META = {
+  Cursed:         { emoji: '🗑️',  color: 0x777777, msg: '…é, eu desinstalava o game' },
+  Torn:           { emoji: '🧻',  color: 0x777777, msg: 'menos merda' },
+  Worn:           { emoji: '🧥',  color: 0x888888, msg: 'melhorando ai no conceito.' },
+  Stocky:         { emoji: '🥊',  color: 0x888888, msg: 'pelo menos aguenta umas porradas.' },
+  Sturdy:         { emoji: '🧱',  color: 0x999999, msg: 'resistente o suficiente pra wave 2.' },
+  Blessed:        { emoji: '✨',  color: 0x66ccff, msg: 'AMÉM' },
+  Enchanted:      { emoji: '🔮',  color: 0x66ccff, msg: ' "Bota no RUTHLESS" ' },
+  Powerful:       { emoji: '💪',  color: 0x4db6ac, msg: 'Talvez voce nao morra em The Summit tão rápido' },
+  Epic:           { emoji: '🟣',  color: 0x9c27b0, msg: ' "Dropa Mana ai" '},
+  Legendary:      { emoji: '🟠',  color: 0xff9800, msg: 'OLHA SÓ' },
+  Godly:          { emoji: '🟡',  color: 0xffeb3b, msg: 'CADÊ MEU NÍVEL 74'},
+  Mythical:       { emoji: '💜',  color: 0x8e24aa, msg: ' "NO INSANE OU NO HARD?" ' },
+  Transcendent:   { emoji: '💠',  color: 0x00bcd4, msg: 'você sente o poder atravessando planos.' },
+  Supreme:        { emoji: '🟥',  color: 0xe53935, msg: 'Cheater?' },
+  Ultimate:       { emoji: '🧬',  color: 0x43a047, msg: 'PUTA QUE PARIU' },
+  'Ultimate+':    { emoji: '➕',  color: 0x2e7d32, msg: 'plus = plus de dano. simples.' },
+  'Ultimate++':   { emoji: '⭑',  color: 0x1b5e20, msg: 'TU CHEATA POUCO HEIN' }
+};
+
+function pickWeighted(items, weights) {
+  const total = weights.reduce((a,b)=>a+b,0);
+  let r = Math.random() * total;
+  for (let i=0; i<items.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return items[i];
+  }
+  return items[items.length-1];
+}
+
+function rollItem() {
+  const rarity = pickWeighted(RARITIES, RARITY_WEIGHTS);
+  const material = MATERIALS[Math.floor(Math.random()*MATERIALS.length)];
+  const slot = SLOTS[Math.floor(Math.random()*SLOTS.length)];
+  return { rarity, material, slot };
+}
+// --- fim dos utilitários ---
+
+
+
 // guarda o ID da última mensagem de HUD por guilda
 const hudMessageByGuild = new Map();
 
@@ -142,53 +192,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 
   
-const RARITIES = [
-  'Cursed','Torn','Worn','Stocky','Sturdy','Blessed','Enchanted','Powerful',
-  'Epic','Legendary','Godly','Mythical','Transcendent','Supreme','Ultimate','Ultimate+','Ultimate++'
-];
-const RARITY_WEIGHTS = [20,18,16,14,12,10,9,8,6,5,4,3,2,1.5,1,0.5,0.25]; // altas mais raras
-
-const MATERIALS = ['Leather','Chain','Mail','Plate','Pristine'];
-const SLOTS = ['Helmet','Chest','Gloves','Boots'];
-
-// mensagem/emoji/cor por raridade
-const RARITY_META = {
-  Cursed:         { emoji: '🗑️',  color: 0x777777, msg: '…é, eu desinstalava o game' },
-  Torn:           { emoji: '🧻',  color: 0x777777, msg: 'menos merda' },
-  Worn:           { emoji: '🧥',  color: 0x888888, msg: 'melhorando ai no conceito.' },
-  Stocky:         { emoji: '🥊',  color: 0x888888, msg: 'pelo menos aguenta umas porradas.' },
-  Sturdy:         { emoji: '🧱',  color: 0x999999, msg: 'resistente o suficiente pra wave 2.' },
-  Blessed:        { emoji: '✨',  color: 0x66ccff, msg: 'AMÉM' },
-  Enchanted:      { emoji: '🔮',  color: 0x66ccff, msg: ' "Bota no RUTHLESS" ' },
-  Powerful:       { emoji: '💪',  color: 0x4db6ac, msg: 'Talvez voce nao morra em The Summit tão rápido' },
-  Epic:           { emoji: '🟣',  color: 0x9c27b0, msg: ' "Dropa Mana ai" '},
-  Legendary:      { emoji: '🟠',  color: 0xff9800, msg: 'OLHA SÓ' },
-  Godly:          { emoji: '🟡',  color: 0xffeb3b, msg: 'CADÊ MEU NÍVEL 74'},
-  Mythical:       { emoji: '💜',  color: 0x8e24aa, msg: ' "NO INSANE OU NO HARD?" ' },
-  Transcendent:   { emoji: '💠',  color: 0x00bcd4, msg: 'você sente o poder atravessando planos.' },
-  Supreme:        { emoji: '🟥',  color: 0xe53935, msg: 'Cheater?' },
-  Ultimate:       { emoji: '🧬',  color: 0x43a047, msg: 'PUTA QUE PARIU' },
-  'Ultimate+':    { emoji: '➕',  color: 0x2e7d32, msg: 'plus = plus de dano. simples.' },
-  'Ultimate++':   { emoji: '⭑',  color: 0x1b5e20, msg: 'TU CHEATA POUCO HEIN' }
-};
-
-function pickWeighted(items, weights) {
-  const total = weights.reduce((a,b)=>a+b,0);
-  let r = Math.random() * total;
-  for (let i=0; i<items.length; i++) {
-    r -= weights[i];
-    if (r <= 0) return items[i];
-  }
-  return items[items.length-1];
-}
-
-function rollItem() {
-  const rarity = pickWeighted(RARITIES, RARITY_WEIGHTS);
-  const material = MATERIALS[Math.floor(Math.random()*MATERIALS.length)];
-  const slot = SLOTS[Math.floor(Math.random()*SLOTS.length)];
-  return { rarity, material, slot };
-}
-// --- fim dos utilitários ---
 
 });
 
